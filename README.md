@@ -4,7 +4,7 @@ Plugin for TwitchIntegration where Twitch chat can vote for items found in chest
 
 ## How to install
 
-- Move the `TwitchVotesItems` folder inside the BepInEx `plugins` folder
+- Move the `TwitchVotesItems.dll` file inside the BepInEx `plugins\TwitchIntegration` folder
 - Done!
 
 ## How to use
