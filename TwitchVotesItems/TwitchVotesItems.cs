@@ -16,13 +16,13 @@ namespace TwitchVotesItems
     [BepInPlugin("dev.orangenote.twitchvotesitems", "TwitchVotesItems", "1.0.0")]
     class TwitchVotesItems : BaseUnityPlugin
     {
-            public float VoteTimer(string configline)
+        public float VoteTimer(string configline)
         {
             if (float.TryParse(configline, out float x))
             {
                 return x;
             }
-            return 0f;
+            return 20000f;
         }
         
         public void Awake()
@@ -30,7 +30,7 @@ namespace TwitchVotesItems
             On.RoR2.ChestBehavior.RollItem += ChestBehavior_RollItem;
             On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
             On.RoR2.ChestBehavior.Open += ChestBehavior_Open;
-            float VoteDur = VoteTimer(Config.Wrap("Twitch", "Vote Duration", "Time your chat has to vote in milliseconds ", "5000").Value);
+            float VoteDur = VoteTimer(Config.Wrap("Twitch", "VoteDuration", "Time your chat has to vote in milliseconds.", "20000").Value);
         }
 
         private void ChestBehavior_Open(On.RoR2.ChestBehavior.orig_Open orig, ChestBehavior self)
