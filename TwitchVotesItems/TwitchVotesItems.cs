@@ -15,17 +15,26 @@ using static TwitchIntegration.TwitchIntegration;
 namespace TwitchVotesItems
 {
     [BepInDependency("dev.orangenote.twitchintegration")]
-    [BepInPlugin("dev.orangenote.twitchvotesitems", "TwitchVotesItems", "1.0.0")]
+    [BepInPlugin("dev.orangenote.twitchvotesitems", "TwitchVotesItems", "1.1.0")]
     class TwitchVotesItems : BaseUnityPlugin
     {
-        public float VoteDuration;
+        private float VoteDuration;
+        private bool DropItems;
 
         public void Awake()
         {
             On.RoR2.ChestBehavior.RollItem += ChestBehavior_RollItem;
             On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
             On.RoR2.ChestBehavior.Open += ChestBehavior_Open;
+
             VoteDuration = ParseVoteDuration(Config.Wrap("Twitch", "VoteDuration", "Time your chat has to vote in milliseconds.", "20000").Value);
+
+            DropItems = Config.Wrap(
+                "Twitch",
+                "DropItems",
+                "If disabled, items will be automatically added to the inventory (experimental, might not work with multiplayer + other mods).",
+                true
+            ).Value;
         }
 
         private float ParseVoteDuration(string configline)
@@ -68,7 +77,9 @@ namespace TwitchVotesItems
                 return;
             }
 
-            if (self.gameObject.name.StartsWith("LunarChest"))
+            var chestName = self.gameObject.name.ToLower();
+
+            if (chestName.StartsWith("lunarchest"))
             {
                 orig(self);
                 return;
@@ -79,6 +90,24 @@ namespace TwitchVotesItems
 
             if (dropPickupValue != PickupIndex.none)
             {
+                if (!DropItems && (chestName.StartsWith("chest") || chestName.StartsWith("goldchest")))
+                {
+                    var pickupController = gameObject.GetComponent<GenericPickupController>();
+
+                    if (pickupController == null)
+                        pickupController = this.gameObject.AddComponent<GenericPickupController>();
+
+                    var characterBody = LocalUserManager.GetFirstLocalUser().cachedBody;
+
+                    characterBody.inventory.GiveItem(dropPickupValue.itemIndex, 1);
+
+                    pickupController.GetType().GetMethod("SendPickupMessage", BindingFlags.Static | BindingFlags.NonPublic)
+                        .Invoke(pickupController, new object[] { characterBody.inventory.GetComponent<CharacterMaster>(), dropPickupValue });
+
+                    dropPickup.SetValue(self, PickupIndex.none);
+                    return;
+                }
+
                 orig(self);
                 return;
             }

@@ -1,10 +1,10 @@
 {
     "name": "TwitchVotesItems",
-    "version_number": "1.0.0",
+    "version_number": "1.1.0",
     "website_url": "https://github.com/OrangeNote/TwitchVotesItems",
     "description": "Plugin for TwitchIntegration where Twitch chat can vote for items found in chests.",
     "dependencies": [
         "bbepis-BepInExPack-1.3.1",
-        "OrangeNote-TwitchIntegration-1.0.0"
+        "OrangeNote-TwitchIntegration-1.1.0"
     ]
 }
