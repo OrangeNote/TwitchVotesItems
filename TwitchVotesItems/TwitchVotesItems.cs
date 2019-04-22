@@ -1,14 +1,16 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using EntityStates;
 using RoR2;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using TwitchIntegration;
-using static TwitchIntegration.TwitchIntegration;
 using UnityEngine;
 using UnityEngine.Networking;
+using static TwitchIntegration.TwitchIntegration;
 
 namespace TwitchVotesItems
 {
@@ -16,21 +18,21 @@ namespace TwitchVotesItems
     [BepInPlugin("dev.orangenote.twitchvotesitems", "TwitchVotesItems", "1.0.0")]
     class TwitchVotesItems : BaseUnityPlugin
     {
-        public float VoteTimer(string configline)
-        {
-            if (float.TryParse(configline, out float x))
-            {
-                return x;
-            }
-            return 20000f;
-        }
-        
+        public float VoteDuration;
+
         public void Awake()
         {
             On.RoR2.ChestBehavior.RollItem += ChestBehavior_RollItem;
             On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
             On.RoR2.ChestBehavior.Open += ChestBehavior_Open;
-            float VoteDur = VoteTimer(Config.Wrap("Twitch", "VoteDuration", "Time your chat has to vote in milliseconds.", "20000").Value);
+            VoteDuration = ParseVoteDuration(Config.Wrap("Twitch", "VoteDuration", "Time your chat has to vote in milliseconds.", "20000").Value);
+        }
+
+        private float ParseVoteDuration(string configline)
+        {
+            if (float.TryParse(configline, out float value))
+                return value;
+            return 20000f;
         }
 
         private void ChestBehavior_Open(On.RoR2.ChestBehavior.orig_Open orig, ChestBehavior self)
@@ -94,10 +96,8 @@ namespace TwitchVotesItems
             randomItemList.Add(RollVoteItem(self));
             randomItemList.Add(RollVoteItem(self));
 
-            var voteDuration = VoteDur;
-
             // Create a new vote, by passing valid poll options and vote duration
-            var vote = new Vote(new List<string>(new string[] { "1", "2", "3" }), voteDuration);
+            var vote = new Vote(new List<string>(new string[] { "1", "2", "3" }), VoteDuration);
 
             vote.StartEventHandler += (_, __) =>
             {
@@ -108,7 +108,7 @@ namespace TwitchVotesItems
                 if (notificationQueue == null)
                     notificationQueue = characterBody.gameObject.AddComponent<VoteNotificationQueue>();
 
-                notificationQueue.OnVoteStart(randomItemList, voteDuration);
+                notificationQueue.OnVoteStart(randomItemList, VoteDuration);
 
                 // Notify the event in chat
                 SendChatMessage(
